@@ -3,6 +3,19 @@ from tkinter import messagebox
 from tkinter import ttk
 import os
 import sys
+import subprocess
+
+def rca(command):
+    """以管理员身份运行指定的 CMD 命令"""
+    try:
+        # 使用 PowerShell 的 Start-Process 命令以管理员身份运行 CMD 命令
+        subprocess.run(
+            f"powershell Start-Process -FilePath 'cmd.exe' -ArgumentList '/c {command}' -Verb RunAs",
+            shell=True,
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        messagebox.showerror("错误", f"命令执行失败: {e.stderr}")
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -36,28 +49,43 @@ def check_java():
 
 def cjh(jh):
     if jh:
-        os.environ['JAVA_HOME'] = jh
+        # 替换路径中的反斜杠为双反斜杠
+        rca(f"setx /M JAVA_HOME {jh}")
         messagebox.showinfo("更改完成", f"已更改Java环境为\n{jh}")
     else:
-        messagebox.showwarning("你没选则JAVA", "你没选则JAVA，请选择Java")
+        messagebox.showwarning("未选择 Java", "未选择 Java，请选择 Java 环境")
 
 def get_jh():
-    cjh(dropdown.get())
+    selected_jh = dropdown.get()
+    if selected_jh:
+        cjh(selected_jh)
+    else:
+        messagebox.showwarning("未选择 Java", "未选择 Java，请选择 Java 环境")
 
 # 设置工作目录为脚本所在目录或打包后的 .exe 文件所在目录
 os.chdir(get_base_path())
+
+# 创建主窗口
 Window = tk.Tk()
 style = ttk.Style()
 style.theme_use("clam")
 Window.title("Java环境切换")
 Window.geometry("300x200")
+
+# 添加标题
 title = tk.Label(Window, text="请选择Java环境", font=("Arial", 16))
 title.place(x=70, y=20)
 
+# 检测 Java 环境
 javas = check_java()
+
+# 创建下拉菜单
 dropdown = ttk.Combobox(Window, values=javas)
 dropdown.place(x=68, y=50)
-cje = ttk.Button(Window, text="更改java环境", command=get_jh)
+
+# 创建按钮
+cje = ttk.Button(Window, text="更改Java环境", command=get_jh)
 cje.place(x=180, y=150)
 
+# 启动主循环
 Window.mainloop()
