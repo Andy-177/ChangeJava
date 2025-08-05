@@ -6,3 +6,5 @@
 ```
 pyinstaller --onefile --noconsole ChangeJava.py
 ```
+# Fix
+- [x] 修复无法永久修改环境变量的问题
